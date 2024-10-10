@@ -1,30 +1,35 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
+import java.util.Random;
 
-public class Sudoku extends JFrame {
+public class SudokuV3 extends JFrame {
     private JPanel boardPanel;
     private JTextField[][] cells;
     private JButton solveButton;
     private JButton clearButton;
+    private JLabel introLabel;
+    private JLabel timerLabel;
     private SudokuSolver sudokuSolver;
-    protected JLabel timerLabel;
-    protected Timer timer;
+    private Timer timer;
 
-    public Sudoku() {
+    public static void main(String[] args) {
+        new SudokuV2();
+    }
+
+    public SudokuV3() {
         setTitle("Sudoku Game");
         setSize(500, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         boardPanel = new JPanel();
         boardPanel.setLayout(new GridLayout(9, 9));
 
+        add(boardPanel, BorderLayout.CENTER);
+
         timerLabel = new JLabel("Time left: 1:00");
-        timerLabel.setHorizontalAlignment(JLabel.CENTER);
-        timerLabel.setFont(new Font("Arial", Font.PLAIN, 24));
+        timerLabel.setFont(new Font("Arial", Font.PLAIN, 16));
 
         timer = new Timer(1000, new ActionListener() {
             int time = 60;
@@ -34,8 +39,7 @@ public class Sudoku extends JFrame {
                 timerLabel.setText("Time left: 0:" + (time < 10 ? "0" : "") + time);
                 if (time == 0) {
                     timer.stop();
-                    JOptionPane.showMessageDialog(Sudoku.this, "Time's up!");
-
+                    JOptionPane.showMessageDialog(SudokuV3.this, "Time's up!");
                 }
             }
         });
@@ -52,130 +56,67 @@ public class Sudoku extends JFrame {
             }
         }
 
+        JPanel buttonPanel = new JPanel(new GridLayout(4, 1));
+        introLabel = new JLabel("Welcome to Sudoku!");
+        introLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        buttonPanel.add(introLabel);
+
         solveButton = new JButton("Solve");
         solveButton.addActionListener(new SolveButtonListener());
+        buttonPanel.add(solveButton);
 
         clearButton = new JButton("Clear");
         clearButton.addActionListener(new ClearButtonListener());
+        buttonPanel.add(clearButton);
 
-        add(timerLabel, BorderLayout.WEST);
-        add(boardPanel, BorderLayout.CENTER);
-        add(solveButton, BorderLayout.NORTH);
-        add(clearButton, BorderLayout.SOUTH);
+        timerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        buttonPanel.add(timerLabel);
+
+        add(buttonPanel, BorderLayout.EAST);
 
         sudokuSolver = new SudokuSolver();
-    }
+        sudokuSolver.setDifficulty(2);
 
-    private class CellKeyListener implements KeyListener {
-        public void keyTyped(KeyEvent e) {
-            char c = e.getKeyChar();
-            if (!Character.isDigit(c) || c == '0') {
-                e.consume();
+        JPanel shapesPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                g.setColor(Color.RED);
+                g.drawRect(10, 10, 50, 50);
+                g.setColor(Color.BLUE);
+                g.drawOval(70, 10, 50, 50);
             }
+        };
+        add(shapesPanel, BorderLayout.NORTH);
+
+        JPanel container1 = new JPanel();
+        container1.setLayout(new BorderLayout());
+
+        JPanel container2 = new JPanel();
+        container2.setLayout(new GridLayout(2,2));
+
+        JPanel container3 = new JPanel();
+        container3.setLayout(new FlowLayout());
+
+        } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt();
         }
-
-        public void keyPressed(KeyEvent e) {
+        System.exit(0);
         }
-
-        public void keyReleased(KeyEvent e) {
         }
-    }
-
-    private class SolveButtonListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            int[][] board = new int[9][9];
-            for (int i = 0; i < 9; i++) {
-                for (int j = 0; j < 9; j++) {
-                    String text = cells[i][j].getText();
-                    if (!text.isEmpty()) {
-                        board[i][j] = Integer.parseInt(text);
-                    }
-                }
-            }
-
-            boolean solved = sudokuSolver.solveSudoku(board);
-
-            if (solved) {
-                for (int i = 0; i < 9; i++) {
-                    for (int j = 0; j < 9; j++) {
-                        cells[i][j].setText(Integer.toString(board[i][j]));
-                    }
-                }
-                timer.stop();
-                JOptionPane.showMessageDialog(Sudoku.this, "Sudoku puzzle solved successfully!");
-            } else {
-                timer.stop();
-                JOptionPane.showMessageDialog(Sudoku.this, "Failed to solve Sudoku puzzle.");
-            }
-        }
-    }
-
+        
     private class ClearButtonListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
+          // Clear text fields
             for (int i = 0; i < 9; i++) {
                 for (int j = 0; j < 9; j++) {
                     cells[i][j].setText("");
                 }
             }
         }
-    }
-
-    private class SudokuSolver {
-    public boolean solveSudoku(int[][] board) {
-        int[] emptyCell = findEmptyCell(board);
-        int row = emptyCell[0];
-        int col = emptyCell[1];
-
-        if (row == -1 && col == -1) {
-            return true;
-        }
-
-        for (int num = 1; num <= 9; num++) {
-            if (isValidMove(board, row, col, num)) {
-
-                board[row][col] = num;
-
-                if (solveSudoku(board)) {
-                    return true;
-                }
-
-                board[row][col] = 0;
-            }
-        }
-
-        return false;
-    }
-
-    private int[] findEmptyCell(int[][] board) {
-        int[] emptyCell = new int[2];
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                if (board[row][col] == 0) {
-                    emptyCell[0] = row;
-                    emptyCell[1] = col;
-                    return emptyCell;
-                }
-            }
-        }
-        emptyCell[0] = -1;
-        emptyCell[1] = -1;
-        return emptyCell;
-    }
-
-    private boolean isValidMove(int[][] board, int row, int col, int num) {
-        for (int i = 0; i < 9; i++) {
-            if (board[row][i] == num || board[i][col] == num
-                    || board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] == num) {
-                return false;
-            }
-        }
-        return true;
-    }
-}
 
     public static void main(String[] args) {
-        Sudoku sudokuGame = new Sudoku();
-        sudokuGame.setVisible(true);
+        SudokuV2 sudoku = new SudokuV2();
+        sudoku.setVisible(true);
     }
 }
-
